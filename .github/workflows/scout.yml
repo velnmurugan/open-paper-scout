@@ -1,0 +1,63 @@
+name: Paper scout
+
+on:
+  schedule:
+    - cron: "17 8 * * 1-5"      # weekdays at 08:17 UTC, after the daily quota resets
+  workflow_dispatch:            # adds a "Run workflow" button in the Actions tab
+
+permissions:
+  contents: write               # to save the log and memory back to the repo
+  issues: write                 # to post the daily suggestions
+
+jobs:
+  scout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check for the API key
+        id: key
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          if [ -z "$GEMINI_API_KEY" ]; then
+            echo "::notice::No GEMINI_API_KEY secret in this repo, so the scout doesn't run. See README.md, Setup."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.key.outputs.ready == 'true'
+
+      - uses: actions/setup-python@v5
+        if: steps.key.outputs.ready == 'true'
+        with:
+          python-version: "3.12"
+
+      - run: pip install -r requirements.txt
+        if: steps.key.outputs.ready == 'true'
+
+      - name: Run the software tests                    # no model calls, no cost
+        if: steps.key.outputs.ready == 'true'
+        run: python test_scout.py
+
+      - name: Run the scout
+        if: steps.key.outputs.ready == 'true'
+        run: python -u scout.py        # -u: show progress live in the log
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+      - name: Post suggestions as an issue
+        if: ${{ always() && steps.key.outputs.ready == 'true' && hashFiles('digest.md') != '' }}   # even if the scout stopped early
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh issue create --title "Paper scout, $(date +%F)" --body-file digest.md
+
+      - name: Save log and memory
+        if: ${{ always() && steps.key.outputs.ready == 'true' }}   # never lose a run's work
+        run: |
+          git config user.name "paper-scout"
+          git config user.email "paper-scout@users.noreply.github.com"
+          git add -A
+          git commit -m "Scout run $(date +%F)" || echo "Nothing new to save"
+          git push

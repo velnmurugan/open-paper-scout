@@ -1,0 +1,5 @@
+# Never commit secrets. The API key lives in GitHub secrets / Colab secrets.
+.env
+__pycache__/
+# Posted as a GitHub issue each run, no need to keep it in the repo.
+digest.md

@@ -1,0 +1,36 @@
+name: Evaluate scout
+
+on:
+  workflow_dispatch:
+    inputs:
+      sample_size:
+        description: "Add this many unlabeled papers to labels.csv (0 = just show the scorecard)"
+        default: "0"
+
+permissions:
+  contents: write               # to save a new labels.csv sample
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Add papers to label
+        if: ${{ inputs.sample_size != '0' }}
+        run: |
+          python evaluate.py sample "${{ inputs.sample_size }}"
+          git config user.name "paper-scout"
+          git config user.email "paper-scout@users.noreply.github.com"
+          git add labels.csv
+          git commit -m "Add papers to label" || echo "Nothing new to label"
+          git push
+
+      - name: Scorecard
+        run: |
+          python evaluate.py | tee scorecard.txt
+          { echo '```'; cat scorecard.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"

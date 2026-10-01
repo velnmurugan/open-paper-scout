@@ -1,0 +1,43 @@
+name: Tests
+
+# Runs on every pull request to the shared repo. It never sees an API key:
+# GitHub doesn't pass secrets to pull requests from forks, and the tests
+# use a fake model anyway.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install -r requirements.txt
+
+      - name: Run the software tests
+        run: python test_scout.py
+
+      - name: Keep personal files out of the shared repo
+        if: github.event_name == 'pull_request'
+        run: |
+          personal=$(git diff --name-only --diff-filter=A origin/${{ github.base_ref }}...HEAD \
+            | grep -E '^(log/|seen\.json$|pending\.json$|digest\.md$|labels\.csv$|\.env$)' || true)
+          if [ -n "$personal" ]; then
+            echo "::error::This pull request adds files from a personal scout run:"
+            echo "$personal"
+            echo "They belong in your own copy, not the shared repo. Remove them and push again."
+            exit 1
+          fi
