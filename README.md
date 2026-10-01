@@ -4,8 +4,8 @@ A small AI agent that checks new arXiv papers every weekday morning and
 suggests the ones that match your interest, with a one-sentence reason.
 It only suggests: it never publishes or changes anything.
 
-Built in Chapter 12 of the Agentic AI course on
-[vectorspace.blog](https://vectorspace.blog/agentic-ai/00-overview).
+Built in Chapter 12 of the free Agentic AI Engineering course on
+[vectorspace.blog](https://vectorspace.blog/overview-2/).
 
 **Want your own?** Click **Use this template → Create a new repository**
 (private), then follow Setup below. **Want to improve this one?** See
