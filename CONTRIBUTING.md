@@ -45,10 +45,11 @@ change needs to break a contract, say why in the PR.
   The Tests workflow rejects PRs that add them.
 - **Never paste a key** in an issue, a PR or a log. If it happens, delete
   the key in AI Studio and make a new one; editing the comment isn't enough.
-- **The scout stays at "suggest".** A PR that lets it send, publish or act
-  on its own won't be merged here, however well it works. Autonomy is
-  earned per deployment, with that deployment's numbers (Chapter 10), so
-  it belongs in your copy, behind your own scorecard.
+- **Autonomy is opt-in and earned.** The shared scout ships at "suggest".
+  Code for a higher level is welcome, but it has to be off by default and
+  switch on only when that copy's own scorecard passes the bars for two weeks
+  (Chapter 10). Nothing that sends, publishes or acts outside the repo gets
+  merged here: "act" is a decision for each deployment, not for shared code.
 
 ## Ideas to start with
 
@@ -65,6 +66,13 @@ Marked by how much of the code you need to understand.
 - **Medium:** a new prompt-injection trap for Stage 6 of Chapter 12, as a
   test with a fake model that "falls for it", checking that the
   grounding check or the digest still catches the damage.
+- **Medium to hard:** raise the scout's autonomy to "draft" (Chapters 10
+  and 11). For each suggestion, the scout writes a short draft summary for
+  you to review, while "suggest" stays the default. That means a setting
+  like `AUTONOMY = "suggest"` in `config.py`, a check in code that refuses
+  "draft" until `evaluate.py` shows every bar passing for two weeks, a way
+  to fall back to "suggest" when a bar fails, and tests for all three. A
+  draft summary needs its own grounding check, just like the reasons do.
 - **Hard:** a better screen prompt, measured on labels from at least two
   different interests in `SCOUTS.md`. A prompt that only helps RAG papers
   only helps me.
